@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Home</title>
+    <link rel="stylesheet" href="user_home.css">
+</head>
+<body>
+    <div class="banner">
+        <h1>RestaurantReservationSystem</h1>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <div class="profile">
+                <img src="person_icon.png" alt="Profile Picture">
+                <h2>Welcome, <span id="welcomeUserName"></span></h2>
+                <button class="info-button" onclick="toggleUserInfo()">Personal Information</button>
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <h3>User Information</h3>
+                    <p id="userName"></p>
+                    <p id="userEmail"></p>
+                    <p id="userPhone"></p>
+                    <p id="userPoints"></p>
+                </div>
+                <button class="logout-button" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        <div class="content">
+            <div class="other-functions">
+                <button class="function-button blue" onclick="makeReservation()">Make Reservation</button>
+                <button class="function-button blue" onclick="queryReservation()">Query Reservation</button>
+                <button class="function-button blue" onclick="restaurantSearch()">Restaurant Search</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                document.getElementById('welcomeUserName').innerText = user.name;
+                document.getElementById('userName').innerText = `Name: ${user.name}`;
+                document.getElementById('userEmail').innerText = `Email: ${user.email}`;
+                document.getElementById('userPhone').innerText = `Phone: ${user.phoneNumber}`;
+                document.getElementById('userPoints').innerText = `Points: ${user.points}`;
+            }
+        });
+
+        function toggleUserInfo() {
+            const userInfo = document.getElementById('userInfo');
+            if (userInfo.style.display === "none") {
+                userInfo.style.display = "block";
+            } else {
+                userInfo.style.display = "none";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'user_login.html';
+        }
+
+        function makeReservation() {
+            window.location.href = 'reservation.html';
+        }
+
+        function queryReservation() {
+            window.location.href = 'query_reservations.html';
+        }
+
+        function restaurantSearch() {
+            window.location.href = 'restaurant_search.html';
+        }
+    </script>
+</body>
+</html>

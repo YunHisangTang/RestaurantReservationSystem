@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Reservations</title>
+    <link rel="stylesheet" href="admin_query_reservations.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Reservations</h1>
+            <div class="button-wrapper">
+                <button class="back-button" onclick="goBack()">Back</button>
+            </div>
+        </div>
+        <div class="filter-container">
+            <label for="phoneNumberFilter">Filter by User Phone Number:</label>
+            <input type="text" id="phoneNumberFilter" onkeyup="filterReservations()">
+        </div>
+        <div class="restaurant-container">
+            <label for="restaurantSelect">Select Restaurant:</label>
+            <select id="restaurantSelect" onchange="fetchReservationsByRestaurant()">
+                <!-- Options will be dynamically populated -->
+            </select>
+        </div>
+        <div id="reservationsList" class="reservations-list">
+            <!-- Reservations will be dynamically populated here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchAdminRestaurants();
+            document.getElementById('phoneNumberFilter').addEventListener('input', handlePhoneNumberFilterChange);
+        });
+
+        function handlePhoneNumberFilterChange() {
+            const filter = document.getElementById('phoneNumberFilter').value;
+            const restaurantContainer = document.querySelector('.restaurant-container');
+            if (filter) {
+                restaurantContainer.style.display = 'none';
+                filterReservations();
+            } else {
+                restaurantContainer.style.display = 'block';
+                fetchReservationsByRestaurant();
+            }
+        }
+
+        function fetchAdminRestaurants() {
+            const adminId = JSON.parse(localStorage.getItem('admin')).id;
+            fetch(`http://localhost:9488/admin/restaurants/${adminId}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const restaurantSelect = document.getElementById('restaurantSelect');
+                restaurantSelect.innerHTML = '';
+                data.forEach(restaurant => {
+                    const option = document.createElement('option');
+                    option.value = restaurant.id;
+                    option.textContent = restaurant.name;
+                    restaurantSelect.appendChild(option);
+                });
+                fetchReservationsByRestaurant(); // 默认加载第一个餐厅的预订信息
+            })
+            .catch(error => {
+                console.error('Error fetching admin restaurants:', error);
+            });
+        }
+
+        function fetchReservationsByRestaurant() {
+            const restaurantId = document.getElementById('restaurantSelect').value;
+            fetch(`http://localhost:9488/reservations/restaurant/${restaurantId}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayReservations(data);
+            })
+            .catch(error => {
+                console.error('Error fetching reservations:', error);
+            });
+        }
+
+        function filterReservations() {
+            const filter = document.getElementById('phoneNumberFilter').value;
+            const reservations = document.querySelectorAll('.reservation');
+
+            reservations.forEach(reservation => {
+                const phoneNumber = reservation.dataset.phoneNumber;
+                if (phoneNumber.includes(filter)) {
+                    reservation.style.display = 'block';
+                } else {
+                    reservation.style.display = 'none';
+                }
+            });
+        }
+
+        function displayReservations(data) {
+            const reservationsList = document.getElementById('reservationsList');
+            reservationsList.innerHTML = '';
+
+            data.forEach(reservation => {
+                const reservationDiv = document.createElement('div');
+                reservationDiv.className = 'reservation';
+                reservationDiv.dataset.phoneNumber = reservation.userPhoneNumber || 'N/A'; // 处理 null 值
+
+                reservationDiv.innerHTML = `
+                    <p><strong>Restaurant:</strong> ${reservation.restaurantName}</p>
+                    <p><strong>User Phone Number:</strong> ${reservation.userPhoneNumber || 'N/A'}</p> <!-- 处理 null 值 -->
+                    <p><strong>Date:</strong> ${reservation.reservationDateTime.split('T')[0]}</p>
+                    <p><strong>Time:</strong> ${reservation.reservationDateTime.split('T')[1]}</p>
+                    <p><strong>Adults:</strong> ${reservation.numAdults}</p>
+                    <p><strong>Children:</strong> ${reservation.numChildren}</p>
+                    <p><strong>Status:</strong> ${reservation.status}</p>
+                    ${reservation.status !== 'Completed' ? `<button class="status-button booked" onclick="editReservation(${reservation.id}, 'Booked')">Mark as Booked</button><button class="status-button delete" onclick="editReservation(${reservation.id}, 'Deleted')">Delete</button><button class="status-button completed" onclick="editReservation(${reservation.id}, 'Completed')">Mark as Completed</button>` : ''}
+                `;
+                reservationsList.appendChild(reservationDiv);
+            });
+        }
+
+        function editReservation(reservationId, status) {
+            fetch(`http://localhost:9488/reservations/${reservationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify({ status })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update reservation status.');
+                }
+                fetchReservationsByRestaurant();
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        }
+
+        function goBack() {
+            window.location.href = 'admin_home.html';
+        }
+    </script>
+</body>
+</html>

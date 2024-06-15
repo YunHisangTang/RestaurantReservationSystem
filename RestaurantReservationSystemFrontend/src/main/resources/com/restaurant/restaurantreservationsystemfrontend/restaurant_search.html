@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Restaurant Search</title>
+    <link rel="stylesheet" href="restaurant_search.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Restaurant Search</h1>
+            <button class="back-button" onclick="goBack()">Back</button>
+        </div>
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Search for a restaurant">
+            <button onclick="performSearch()">Search</button>
+            <button onclick="nextResult()">Next</button>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <script>
+        var map = L.map('map').setView([23.6978, 120.9605], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var markers = [];
+        var searchResults = [];
+        var currentResultIndex = 0;
+
+        function performSearch() {
+            var query = document.getElementById('search').value;
+            fetch(`http://localhost:9488/restaurants/search?query=${query}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                searchResults = data;
+                currentResultIndex = 0;
+                if (searchResults.length > 0) {
+                    showResult(searchResults[currentResultIndex]);
+                } else {
+                    alert("No results found.");
+                }
+            });
+        }
+
+        function showResult(result) {
+            if (markers.length) {
+                markers.forEach(marker => map.removeLayer(marker));
+            }
+            var marker = L.marker([result.latitude, result.longitude]).addTo(map)
+                .bindPopup(`<b>${result.name}</b><br>${result.address}`).openPopup();
+            markers.push(marker);
+            map.setView([result.latitude, result.longitude], 14);
+        }
+
+        function nextResult() {
+            if (searchResults.length > 0) {
+                currentResultIndex = (currentResultIndex + 1) % searchResults.length;
+                showResult(searchResults[currentResultIndex]);
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'user_home.html';
+        }
+    </script>
+</body>
+</html>

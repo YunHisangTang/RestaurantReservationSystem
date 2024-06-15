@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Restaurant</title>
+    <link rel="stylesheet" href="edit_restaurant.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+            <button class="back-button" onclick="goBack()">Back</button>
+            <h2>Edit Restaurant</h2>
+            <form id="restaurant-form">
+                <label for="name">Restaurant Name:</label>
+                <input type="text" id="name" name="name" required><br>
+
+                <label for="address">Address:</label>
+                <input type="text" id="address" name="address" required><br>
+
+                <label for="latitude">Latitude:</label>
+                <input type="text" id="latitude" name="latitude" required readonly><br>
+
+                <label for="longitude">Longitude:</label>
+                <input type="text" id="longitude" name="longitude" required readonly><br>
+
+                <label for="description">Description:</label>
+                <textarea id="description" name="description"></textarea><br>
+
+                <label for="menu">Menu:</label>
+                <textarea id="menu" name="menu"></textarea><br>
+
+                <label for="openingTime">Opening Time:</label>
+                <input type="time" id="openingTime" name="openingTime" required><br>
+
+                <label for="closingTime">Closing Time:</label>
+                <input type="time" id="closingTime" name="closingTime" required><br>
+
+                <label for="diningDuration">Dining Duration (mins):</label>
+                <input type="number" id="diningDuration" name="diningDuration" required><br>
+
+                <label for="capacity">Capacity:</label>
+                <input type="number" id="capacity" name="capacity" required><br>
+
+                <button type="submit">Update Restaurant</button>
+            </form>
+        </div>
+        <div class="right">
+            <div class="search-container">
+                <input type="text" id="search" placeholder="Search for a place">
+                <button id="clearSearch" onclick="clearSearch()">X</button>
+                <button onclick="performSearch()">Search</button>
+                <button onclick="nextResult()">Next Result</button>
+            </div>
+            <div id="map"></div>
+            <div id="search-results"></div>
+        </div>
+    </div>
+    <script>
+        var map = L.map('map').setView([23.6978, 120.9605], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var geocoder = L.Control.Geocoder.nominatim();
+        var marker;
+        var searchResults = [];
+        var currentResultIndex = 0;
+
+        map.on('click', function(e) {
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            marker = L.marker(e.latlng).addTo(map);
+            document.getElementById('latitude').value = e.latlng.lat;
+            document.getElementById('longitude').value = e.latlng.lng;
+        });
+
+        function performSearch() {
+            var query = document.getElementById('search').value;
+            geocoder.geocode(query, function(results) {
+                if (results && results.length > 0) {
+                    searchResults = results;
+                    currentResultIndex = 0;
+                    showResult(results[currentResultIndex]);
+                }
+            });
+        }
+
+        function showResult(result) {
+            map.setView(result.center, 14);
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            marker = L.marker(result.center).addTo(map);
+            document.getElementById('latitude').value = result.center.lat;
+            document.getElementById('longitude').value = result.center.lng;
+            document.getElementById('address').value = result.name;
+            document.getElementById('name').value = result.properties.display_name;
+        }
+
+        function nextResult() {
+            if (searchResults.length > 0) {
+                currentResultIndex = (currentResultIndex + 1) % searchResults.length;
+                showResult(searchResults[currentResultIndex]);
+            }
+        }
+
+        function clearSearch() {
+            document.getElementById('search').value = '';
+            document.getElementById('search').focus();
+        }
+
+        function goBack() {
+            window.location.href = 'admin_restaurants.html';
+        }
+
+        document.getElementById('restaurant-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const urlParams = new URLSearchParams(window.location.search);
+            const restaurantId = urlParams.get('id');
+            var admin = JSON.parse(localStorage.getItem('admin'));
+            if (!admin) {
+                alert('No admin information found');
+                return;
+            }
+
+            var formData = {
+                name: document.getElementById('name').value,
+                address: document.getElementById('address').value,
+                latitude: document.getElementById('latitude').value,
+                longitude: document.getElementById('longitude').value,
+                description: document.getElementById('description').value,
+                menu: document.getElementById('menu').value,
+                openingTime: document.getElementById('openingTime').value,
+                closingTime: document.getElementById('closingTime').value,
+                diningDuration: document.getElementById('diningDuration').value,
+                capacity: document.getElementById('capacity').value
+            };
+            fetch(`http://localhost:9488/restaurants/update/${restaurantId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Restaurant updated successfully!');
+                window.location.href = 'admin_restaurants.html';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update restaurant.');
+            });
+        });
+
+        // Load restaurant data for editing
+        document.addEventListener("DOMContentLoaded", function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const restaurantId = urlParams.get('id');
+            fetch(`http://localhost:9488/restaurants/${restaurantId}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('name').value = data.name;
+                document.getElementById('address').value = data.address;
+                document.getElementById('latitude').value = data.latitude;
+                document.getElementById('longitude').value = data.longitude;
+                document.getElementById('description').value = data.description;
+                document.getElementById('menu').value = data.menu;
+                document.getElementById('openingTime').value = data.openingTime;
+                document.getElementById('closingTime').value = data.closingTime;
+                document.getElementById('diningDuration').value = data.diningDuration;
+                document.getElementById('capacity').value = data.capacity;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load restaurant data.');
+            });
+        });
+    </script>
+</body>
+</html>

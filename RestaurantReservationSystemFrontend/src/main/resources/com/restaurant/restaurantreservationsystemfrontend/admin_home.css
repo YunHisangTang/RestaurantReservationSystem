@@ -1,0 +1,155 @@
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+/* Reset styles */
+body, h2, h3, p, button {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    box-sizing: border-box;
+}
+
+/* Background style */
+body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Banner */
+.banner {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
+}
+
+.banner h1 {
+    font-size: 2.5rem;
+    color: #00bcd4;  /* Bright cyan color for the banner text */
+}
+
+/* Container */
+.container {
+    display: flex;
+    background: rgba(0, 0, 0, 0.8);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    width: 90%;
+    max-width: 1200px;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    width: 300px;
+    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar .profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sidebar .profile-picture {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+}
+
+.sidebar .profile h2 {
+    color: #00bcd4;  /* Bright cyan color for headings */
+    margin: 20px 0;
+}
+
+/* Buttons */
+button {
+    background: #00bcd4;  /* Bright cyan background for buttons */
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+    transition: background 0.3s, transform 0.3s;
+}
+
+button:hover {
+    background: #008c9e;  /* Darker cyan on hover */
+    transform: scale(1.05);  /* Slightly enlarge button on hover */
+}
+
+/* Admin Info */
+.admin-info {
+    margin-top: 10px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 5px;
+    text-align: left;
+    display: none;  /* Initially hidden */
+}
+
+.admin-info h3 {
+    margin-bottom: 10px;
+    color: #00bcd4;  /* Bright cyan color for subheadings */
+}
+
+.admin-info p {
+    margin: 5px 0;
+}
+
+/* Content area */
+.content {
+    flex-grow: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.content h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #00bcd4;  /* Bright cyan color for content headings */
+}
+
+.function-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.function-button {
+    background: linear-gradient(45deg, #ff5722, #ff9800);  /* Bright orange gradient */
+    margin: 10px;
+    padding: 15px 30px;
+    font-size: 1rem;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    color: #fff;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.function-button:hover {
+    background: linear-gradient(45deg, #ff9800, #ff5722);
+    transform: translateY(-5px);  /* Lift button on hover */
+}
+
+.function-button:active {
+    transform: translateY(0);  /* Return to normal on click */
+}

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Make a Reservation</title>
+    <link rel="stylesheet" href="reservation.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Make a Reservation</h1>
+            <div class="button-wrapper">
+                <button class="back-button" onclick="goBack()">Back</button>
+            </div>
+        </div>
+        <form id="reservation-form">
+            <label for="restaurantSelect">Select Restaurant:</label>
+            <select id="restaurantSelect" onchange="fetchAvailableTimes()" required>
+                <!-- Options will be dynamically populated -->
+            </select><br>
+
+            <label for="reservationDate">Reservation Date:</label>
+            <input type="date" id="reservationDate" onchange="fetchAvailableTimes()" required><br>
+
+            <label for="reservationTime">Reservation Time:</label>
+            <select id="reservationTime" onchange="checkAvailableCapacity()" required>
+                <!-- Times will be dynamically populated -->
+            </select><br>
+
+            <label for="availableCapacity">Available capacity:</label>
+            <div id="availableCapacity">-</div><br>
+
+            <label for="numAdults">Number of Adults:</label>
+            <input type="number" id="numAdults" min="0" value="0" oninput="updateAvailableCapacity()" required><br>
+
+            <label for="numChildren">Number of Children:</label>
+            <input type="number" id="numChildren" min="0" value="0" oninput="updateAvailableCapacity()" required><br>
+
+            <label for="isSameTable">Same Table:</label>
+            <input type="checkbox" id="isSameTable"><br>
+
+            <button type="submit">Reserve</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchRestaurants();
+            setMinDate();
+        });
+
+        function setMinDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('reservationDate').setAttribute('min', today);
+        }
+
+        function fetchRestaurants() {
+            fetch('http://localhost:9488/restaurants/all', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const restaurantSelect = document.getElementById('restaurantSelect');
+                restaurantSelect.innerHTML = '';
+                data.forEach(restaurant => {
+                    const option = document.createElement('option');
+                    option.value = restaurant.id;
+                    option.textContent = restaurant.name;
+                    restaurantSelect.appendChild(option);
+                });
+                fetchAvailableTimes();
+            })
+            .catch(error => {
+                console.error('Error fetching restaurants:', error);
+            });
+        }
+
+        function fetchAvailableTimes() {
+            const restaurantId = document.getElementById('restaurantSelect').value;
+            const reservationDate = document.getElementById('reservationDate').value;
+            if (!restaurantId || !reservationDate) return;
+
+            fetch(`http://localhost:9488/reservations/slots/${restaurantId}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const reservationTimeSelect = document.getElementById('reservationTime');
+                reservationTimeSelect.innerHTML = '';
+                const currentDateTime = new Date();
+                const selectedDate = new Date(reservationDate);
+
+                data.times.forEach(time => {
+                    const [hour, minute] = time.split(':');
+                    const slotTime = new Date(selectedDate);
+                    slotTime.setHours(hour, minute, 0, 0);
+                    if (slotTime > currentDateTime) {
+                        const option = document.createElement('option');
+                        option.value = time;
+                        option.textContent = time;
+                        reservationTimeSelect.appendChild(option);
+                    }
+                });
+                checkAvailableCapacity();
+            })
+            .catch(error => {
+                console.error('Error fetching available times:', error);
+            });
+        }
+
+        function checkAvailableCapacity() {
+            const restaurantId = document.getElementById('restaurantSelect').value;
+            const reservationDate = document.getElementById('reservationDate').value;
+            const reservationTime = document.getElementById('reservationTime').value;
+            if (!restaurantId || !reservationDate || !reservationTime) return;
+
+            fetch(`http://localhost:9488/reservations/check-capacity?restaurantId=${restaurantId}&reservationDate=${reservationDate}&reservationTime=${reservationTime}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const availableCapacityElement = document.getElementById('availableCapacity');
+                availableCapacityElement.textContent = data;
+                availableCapacityElement.setAttribute('data-initial', data);
+                updateAvailableCapacity();
+            })
+            .catch(error => {
+                console.error('Error checking capacity:', error);
+            });
+        }
+
+        function updateAvailableCapacity() {
+            const numAdults = parseInt(document.getElementById('numAdults').value) || 0;
+            const numChildren = parseInt(document.getElementById('numChildren').value) || 0;
+            const totalPeople = numAdults + numChildren;
+
+            const availableCapacityElement = document.getElementById('availableCapacity');
+            const initialCapacity = parseInt(availableCapacityElement.getAttribute('data-initial')) || 0;
+            availableCapacityElement.textContent = Math.max(0, initialCapacity - totalPeople);
+        }
+
+        document.getElementById('reservation-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const userId = JSON.parse(localStorage.getItem('user')).id;
+            const restaurantId = document.getElementById('restaurantSelect').value;
+            const reservationDate = document.getElementById('reservationDate').value;
+            const reservationTime = document.getElementById('reservationTime').value;
+            const numAdults = document.getElementById('numAdults').value;
+            const numChildren = document.getElementById('numChildren').value;
+            const isSameTable = document.getElementById('isSameTable').checked;
+
+            const reservation = {
+                userId,
+                restaurantId,
+                reservationDateTime: reservationDate + 'T' + reservationTime,
+                numAdults: parseInt(numAdults),
+                numChildren: parseInt(numChildren),
+                isSameTable,
+                status: "Booked"
+            };
+
+            fetch('http://localhost:9488/reservations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify(reservation)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text); });
+                }
+                return response.text();
+            })
+            .then(message => {
+                alert(message);
+                // 清空表单
+                document.getElementById('reservation-form').reset();
+                document.getElementById('availableCapacity').textContent = '-';
+                document.getElementById('reservationTime').innerHTML = '';
+                setMinDate(); // 重新设置最小日期
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        });
+
+        function goBack() {
+            window.location.href = 'user_home.html';
+        }
+    </script>
+</body>
+</html>

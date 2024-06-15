@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Set Reservation Slots</title>
+    <link rel="stylesheet" href="set_reservation_slots.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Set Reservation Slots</h1>
+            <button class="back-button" onclick="goBack()">Back</button>
+        </div>
+        <div class="form-container">
+            <label for="restaurantSelect">Select Restaurant:</label>
+            <select id="restaurantSelect" onchange="fetchRestaurantDetails()">
+                <!-- Options will be dynamically populated -->
+            </select>
+            <div class="time-inputs">
+                <label for="startTime">Start Time:</label>
+                <input type="time" id="startTime" disabled><br>
+
+                <label for="endTime">End Time:</label>
+                <input type="time" id="endTime" disabled><br>
+
+                <label for="diningDuration">Dining Duration (mins):</label>
+                <input type="number" id="diningDuration" disabled><br>
+
+                <button class="action-button" id="autoGenerateButton" onclick="autoGenerateSlots()" style="display:none;">Auto Generate Slots</button>
+            </div>
+            <div class="slots-container">
+                <h3>Reservation Slots</h3>
+                <button class="action-button" id="editButton" onclick="enableEditing()">Edit</button>
+                <button class="action-button" id="saveButton" onclick="saveSlots()" style="display:none;">Save</button>
+                <button class="action-button" id="cancelButton" onclick="cancelEditing()" style="display:none;">Cancel</button>
+                <div id="slotsList">
+                    <!-- Slots will be dynamically added here -->
+                </div>
+                <button class="action-button" id="addSlotButton" onclick="addEmptySlot()" style="display:none;">Add Slot</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchRestaurants();
+        });
+
+        function fetchRestaurants() {
+            fetch('http://localhost:9488/restaurants/admin/' + JSON.parse(localStorage.getItem('admin')).id, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const restaurantSelect = document.getElementById('restaurantSelect');
+                restaurantSelect.innerHTML = '';
+                data.forEach(restaurant => {
+                    const option = document.createElement('option');
+                    option.value = restaurant.id;
+                    option.textContent = restaurant.name;
+                    restaurantSelect.appendChild(option);
+                });
+            });
+        }
+
+        function fetchRestaurantDetails() {
+            const restaurantId = document.getElementById('restaurantSelect').value;
+            fetch(`http://localhost:9488/restaurants/${restaurantId}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('startTime').value = data.openingTime;
+                document.getElementById('endTime').value = data.closingTime;
+                document.getElementById('diningDuration').value = data.diningDuration;
+                fetchReservationSlots(restaurantId);
+            })
+            .catch(error => console.error('Error fetching restaurant details:', error));
+        }
+
+        function fetchReservationSlots(restaurantId) {
+            fetch(`http://localhost:9488/reservations/slots/${restaurantId}`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const slotsList = document.getElementById('slotsList');
+                slotsList.innerHTML = '';
+                if (data.times.length === 0) {
+                    addEmptySlot();
+                } else {
+                    data.times.forEach(time => {
+                        addSlot(null, time, false);
+                    });
+                }
+            })
+            .catch(error => console.error('Error fetching reservation slots:', error));
+        }
+
+        function autoGenerateSlots() {
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const diningDuration = document.getElementById('diningDuration').value;
+
+            if (!startTime || !endTime || !diningDuration) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            const slotsList = document.getElementById('slotsList');
+            slotsList.innerHTML = '';
+            let currentTime = new Date(`1970-01-01T${startTime}`);
+            const endTimeDate = new Date(`1970-01-01T${endTime}`);
+
+            console.log('Generating slots from', currentTime, 'to', endTimeDate, 'with duration', diningDuration);
+
+            while (currentTime < endTimeDate) {
+                const slotTime = currentTime.toTimeString().substring(0, 5);
+                addSlot(null, slotTime, true);
+                currentTime.setMinutes(currentTime.getMinutes() + parseInt(diningDuration));
+            }
+        }
+
+        function addSlot(id, time, editable = true) {
+            const slotDiv = document.createElement('div');
+            slotDiv.className = 'slot';
+            slotDiv.innerHTML = `
+                <input type="time" value="${time}" ${editable ? '' : 'disabled'} required>
+                <button class="remove-button" onclick="removeSlot(this)" ${editable ? '' : 'style="display:none;"'}>X</button>
+            `;
+            if (id !== null) {
+                slotDiv.setAttribute('data-id', id);
+            }
+            document.getElementById('slotsList').appendChild(slotDiv);
+        }
+
+        function addEmptySlot() {
+            addSlot(null, '', true);
+        }
+
+        function removeSlot(button) {
+            button.parentElement.remove();
+        }
+
+        function enableEditing() {
+            document.querySelectorAll('.slot input').forEach(input => input.disabled = false);
+            document.querySelectorAll('.slot .remove-button').forEach(button => button.style.display = 'inline-block');
+            document.getElementById('editButton').style.display = 'none';
+            document.getElementById('saveButton').style.display = 'inline-block';
+            document.getElementById('cancelButton').style.display = 'inline-block';
+            document.getElementById('addSlotButton').style.display = 'inline-block';
+            document.getElementById('autoGenerateButton').style.display = 'inline-block';
+        }
+
+        function saveSlots() {
+            const restaurantId = document.getElementById('restaurantSelect').value;
+            const slots = Array.from(document.querySelectorAll('.slot')).map(slot => slot.querySelector('input').value);
+            
+            const payload = { restaurantId, times: slots };
+            
+
+            fetch(`http://localhost:9488/reservations/slots/${restaurantId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update reservation slots.');
+                }
+                return response.text(); // 使用 .text() 而不是 .json() 以匹配后端返回的字符串消息
+            })
+            .then(message => {
+                alert('Reservation slots updated successfully!');
+                fetchReservationSlots(restaurantId);
+                disableEditing();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update reservation slots.');
+            });
+        }
+
+        function disableEditing() {
+            document.querySelectorAll('.slot input').forEach(input => input.disabled = true);
+            document.querySelectorAll('.slot .remove-button').forEach(button => button.style.display = 'none');
+            document.getElementById('editButton').style.display = 'inline-block';
+            document.getElementById('saveButton').style.display = 'none';
+            document.getElementById('cancelButton').style.display = 'none';
+            document.getElementById('addSlotButton').style.display = 'none';
+            document.getElementById('autoGenerateButton').style.display = 'none';
+        }
+
+        function cancelEditing() {
+            fetchReservationSlots(document.getElementById('restaurantSelect').value);
+            disableEditing();
+        }
+
+        function goBack() {
+            window.location.href = 'admin_home.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Home</title>
+    <link rel="stylesheet" href="admin_home.css">
+</head>
+<body>
+    <div class="banner">
+        <h1>Admin Dashboard</h1>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <div class="profile">
+                <img src="person_icon_2.png" alt="Profile Picture" class="profile-picture">
+                <h2>Welcome, <span id="welcomeAdminName"></span></h2>
+                <button class="info-button" onclick="toggleAdminInfo()">Toggle Information</button>
+                <div class="admin-info" id="adminInfo" style="display: none;">
+                    <h3>Admin Information</h3>
+                    <p id="adminName">Name: </p>
+                    <p id="adminEmail">Email: </p>
+                    <p id="adminPhone">Phone: </p>
+                    <p id="adminPoints">Points: </p>
+                </div>
+                <button class="logout-button" onclick="logout()">Logout</button>
+            </div>
+        </div>
+        <div class="content">
+            <div class="function-buttons">
+                <button class="function-button" onclick="queryReservations()">Query Reservations</button>
+                <button class="function-button" onclick="setReservationSlots()">Set Reservation Slots</button>
+                <button class="function-button" onclick="editRestaurant()">Edit Restaurant</button>
+                <button class="function-button" onclick="addNewRestaurant()">Add New Restaurant</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const admin = JSON.parse(localStorage.getItem('admin'));
+            if (admin) {
+                document.getElementById('welcomeAdminName').innerText = admin.name;
+                document.getElementById('adminName').innerText += admin.name;
+                document.getElementById('adminEmail').innerText += admin.email;
+                document.getElementById('adminPhone').innerText += admin.phoneNumber;
+                document.getElementById('adminPoints').innerText += admin.points;
+            }
+        });
+
+        function toggleAdminInfo() {
+            const adminInfo = document.getElementById('adminInfo');
+            if (adminInfo.style.display === "none") {
+                adminInfo.style.display = "block";
+            } else {
+                adminInfo.style.display = "none";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('admin');
+            window.location.href = 'admin_login.html';
+        }
+
+        function queryReservations() {
+            window.location.href = 'admin_query_reservations.html';
+        }
+
+        function setReservationSlots() {
+            window.location.href = 'set_reservation_slots.html';
+        }
+
+        function editRestaurant() {
+            window.location.href = 'admin_restaurants.html';
+        }
+
+        function addNewRestaurant() {
+            window.location.href = 'add_restaurant.html';
+        }
+    </script>
+</body>
+</html>

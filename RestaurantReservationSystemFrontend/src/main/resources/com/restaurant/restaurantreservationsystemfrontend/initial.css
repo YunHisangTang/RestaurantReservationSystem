@@ -1,0 +1,78 @@
+/* Reset some default styles */
+body, h1, button {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    box-sizing: border-box;
+}
+
+/* Background style */
+body {
+    background: linear-gradient(120deg, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+/* Card style */
+.card {
+    background: transparent; /* Match background color */
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: none; /* Remove shadow */
+}
+
+/* Card heading style */
+.card h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+/* Button container style */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Button style */
+button {
+    background: #1e3c72;
+    border: none;
+    color: #fff;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #1b2a49;
+}
+
+/* Animation */
+button {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+button::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 200%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+    transition: left 0.7s;
+}
+
+button:hover::after {
+    left: 50%;
+}

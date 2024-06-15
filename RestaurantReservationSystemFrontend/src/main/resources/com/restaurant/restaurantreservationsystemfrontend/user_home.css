@@ -1,0 +1,138 @@
+/* user_home.css */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+.banner {
+    width: 100%;
+    background-color: #1f1f1f;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+
+.banner h1 {
+    margin: 0;
+    color: #ff4081;
+    font-size: 2.5rem;
+}
+
+.container {
+    display: flex;
+    background: #1f1f1f;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    overflow: hidden;
+    width: 80%;
+    max-width: 1200px;
+    color: #ffffff;
+}
+
+.sidebar {
+    background-color: #282828;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    width: 300px;
+    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar .profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sidebar .profile img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+.sidebar h2 {
+    margin: 1rem 0;
+    color: #ff4081;
+}
+
+button {
+    background-color: #ff4081;
+    color: #ffffff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0.5rem 0;
+    width: 100%;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #e91e63;
+}
+
+.content {
+    padding: 2rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h2, h3 {
+    color: #ff4081;
+}
+
+.user-info {
+    margin-bottom: 1rem;
+    background-color: #333333;
+    padding: 1rem;
+    border-radius: 8px;
+    width: 100%;
+    text-align: left;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.user-info p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+}
+
+.other-functions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.function-button {
+    background: linear-gradient(45deg, #1e90ff, #00bfff);
+    margin: 10px;
+    padding: 15px 30px;
+    font-size: 16px;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    color: #ffffff;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.function-button:hover {
+    background: linear-gradient(45deg, #00bfff, #1e90ff);
+    transform: translateY(-5px);
+}
+
+.function-button:active {
+    transform: translateY(0);
+}
